@@ -19,11 +19,13 @@ package io.github._4drian3d.authmevelocity.velocity.utils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
+import io.github._4drian3d.authmevelocity.api.velocity.event.ProxyLoginEvent;
 import io.github._4drian3d.authmevelocity.common.configuration.ProxyConfiguration;
 import io.github._4drian3d.authmevelocity.velocity.AuthMeVelocityPlugin;
 import net.kyori.adventure.text.Component;
@@ -54,6 +56,18 @@ public final class QueueManager {
         proxy.getScheduler().buildTask(plugin, this::updateTabLists)
                 .repeat(1, TimeUnit.SECONDS)
                 .schedule();
+
+        proxy.getEventManager().register(plugin, this);
+    }
+
+    @Subscribe
+    public void onLogin(ProxyLoginEvent event) {
+        if (plugin.config().get().queue().enabled()) {
+            Player player = event.getPlayer();
+            if (isInQueue(player)) {
+                sendQueueMessage(player, plugin.config().get().queue().positionMessage());
+            }
+        }
     }
 
     public boolean joinQueue(Player player) {
@@ -74,6 +88,8 @@ public final class QueueManager {
         if (removed) {
             player.sendMessage(MiniMessage.miniMessage().deserialize(plugin.config().get().queue().leaveMessage()));
             player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
+            // Clear their tab list entries of other queued players
+            player.getTabList().clearAll();
         }
         return removed;
     }
@@ -110,16 +126,39 @@ public final class QueueManager {
         if (!config.enabled()) return;
 
         proxy.getServer(config.targetServer()).ifPresent(target -> {
-            UUID uuid = !priorityQueue.isEmpty() ? priorityQueue.get(0) : (!regularQueue.isEmpty() ? regularQueue.get(0) : null);
-            if (uuid == null) return;
-
-            proxy.getPlayer(uuid).ifPresent(player -> {
-                if (plugin.isLogged(player)) {
-                    player.createConnectionRequest(target).connect();
-                    removePlayer(uuid);
+            // Find the first player in queue who is logged in
+            UUID toSend = null;
+            for (UUID uuid : priorityQueue) {
+                if (isLogged(uuid)) {
+                    toSend = uuid;
+                    break;
                 }
-            });
+            }
+            if (toSend == null) {
+                for (UUID uuid : regularQueue) {
+                    if (isLogged(uuid)) {
+                        toSend = uuid;
+                        break;
+                    }
+                }
+            }
+
+            if (toSend != null) {
+                final UUID finalUuid = toSend;
+                proxy.getPlayer(finalUuid).ifPresent(player -> {
+                    player.createConnectionRequest(target).connect().thenAccept(result -> {
+                        if (result.isSuccessful()) {
+                            removePlayer(finalUuid);
+                            player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
+                        }
+                    });
+                });
+            }
         });
+    }
+
+    private boolean isLogged(UUID uuid) {
+        return proxy.getPlayer(uuid).map(plugin::isLogged).orElse(false);
     }
 
     private void updateTabLists() {
@@ -150,12 +189,20 @@ public final class QueueManager {
     private void updateQueueTabEntries(Player player, ProxyConfiguration.Queue config) {
         TabList tabList = player.getTabList();
         
-        // Remove existing entries to refresh (optional, but ensures clean list)
-        // Note: In a production environment, you might want to only add/remove differences
-        
-        // Add Queued Players to Tab
+        // Add Queued Players to Tab if they are not already there
         priorityQueue.forEach(uuid -> addQueueEntry(tabList, uuid, config));
         regularQueue.forEach(uuid -> addQueueEntry(tabList, uuid, config));
+        
+        // Remove entries that are no longer in queue
+        tabList.getEntries().forEach(entry -> {
+            UUID uuid = entry.getProfile().getId();
+            // Don't remove the player themselves if Velocity adds them automatically
+            if (uuid.equals(player.getUniqueId())) return;
+            
+            if (!priorityQueue.contains(uuid) && !regularQueue.contains(uuid)) {
+                tabList.removeEntry(uuid);
+            }
+        });
     }
 
     private void addQueueEntry(TabList tabList, UUID uuid, ProxyConfiguration.Queue config) {

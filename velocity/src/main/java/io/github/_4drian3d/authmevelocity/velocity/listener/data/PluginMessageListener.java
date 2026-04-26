@@ -83,7 +83,7 @@ public final class PluginMessageListener implements Listener<PluginMessageEvent>
                     plugin.logDebug("PluginMessageEvent | Login type");
                     if (player != null && plugin.addPlayer(player)) {
                         eventManager.fireAndForget(new ProxyLoginEvent(player));
-                        if (plugin.config().get().sendOnLogin().sendToServerOnLogin()) {
+                        if (plugin.config().get().sendOnLogin().sendToServerOnLogin() && !plugin.config().get().queue().enabled()) {
                             this.createServerConnectionRequest(player, connection);
                         }
                         plugin.logDebug("PluginMessageEvent | Player not null");

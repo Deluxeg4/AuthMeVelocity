@@ -66,7 +66,7 @@ public class ProxyConfiguration {
     @ConfigSerializable
     public static class Queue {
         @Comment("Enable the queue system")
-        private boolean enabled = false;
+        private boolean enabled = true;
         public boolean enabled() {
             return this.enabled;
         }
