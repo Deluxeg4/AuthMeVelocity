@@ -119,6 +119,12 @@ public class ProxyConfiguration {
             public String footer() {
                 return this.footer;
             }
+
+            @Comment("Format for player names in TabList while in queue. Use {name} for player name.")
+            private String tabNameFormat = "<gray>{name}";
+            public String tabNameFormat() {
+                return this.tabNameFormat;
+            }
         }
     }
 

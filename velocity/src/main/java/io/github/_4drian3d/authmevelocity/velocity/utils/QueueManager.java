@@ -21,9 +21,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.util.GameProfile;
 import io.github._4drian3d.authmevelocity.common.configuration.ProxyConfiguration;
 import io.github._4drian3d.authmevelocity.velocity.AuthMeVelocityPlugin;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -70,7 +73,7 @@ public final class QueueManager {
         boolean removed = priorityQueue.remove(player.getUniqueId()) || regularQueue.remove(player.getUniqueId());
         if (removed) {
             player.sendMessage(MiniMessage.miniMessage().deserialize(plugin.config().get().queue().leaveMessage()));
-            player.sendPlayerListHeaderAndFooter(MiniMessage.miniMessage().deserialize(""), MiniMessage.miniMessage().deserialize(""));
+            player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
         }
         return removed;
     }
@@ -133,16 +136,43 @@ public final class QueueManager {
                 Placeholder.unparsed("online_queue", String.valueOf(onlineQueue))
         );
 
-        priorityQueue.forEach(uuid -> updatePlayerTab(uuid, placeholders, config));
-        regularQueue.forEach(uuid -> updatePlayerTab(uuid, placeholders, config));
+        Component header = MiniMessage.miniMessage().deserialize(config.tabList().header(), placeholders);
+        Component footer = MiniMessage.miniMessage().deserialize(config.tabList().footer(), placeholders);
+
+        for (Player player : proxy.getAllPlayers()) {
+            if (isInQueue(player)) {
+                player.sendPlayerListHeaderAndFooter(header, footer);
+                updateQueueTabEntries(player, config);
+            }
+        }
     }
 
-    private void updatePlayerTab(UUID uuid, TagResolver placeholders, ProxyConfiguration.Queue config) {
-        proxy.getPlayer(uuid).ifPresent(player -> {
-            player.sendPlayerListHeaderAndFooter(
-                MiniMessage.miniMessage().deserialize(config.tabList().header(), placeholders),
-                MiniMessage.miniMessage().deserialize(config.tabList().footer(), placeholders)
+    private void updateQueueTabEntries(Player player, ProxyConfiguration.Queue config) {
+        TabList tabList = player.getTabList();
+        
+        // Remove existing entries to refresh (optional, but ensures clean list)
+        // Note: In a production environment, you might want to only add/remove differences
+        
+        // Add Queued Players to Tab
+        priorityQueue.forEach(uuid -> addQueueEntry(tabList, uuid, config));
+        regularQueue.forEach(uuid -> addQueueEntry(tabList, uuid, config));
+    }
+
+    private void addQueueEntry(TabList tabList, UUID uuid, ProxyConfiguration.Queue config) {
+        if (tabList.getEntry(uuid).isPresent()) return;
+
+        proxy.getPlayer(uuid).ifPresent(queuedPlayer -> {
+            Component displayName = MiniMessage.miniMessage().deserialize(
+                    config.tabList().tabNameFormat(),
+                    Placeholder.unparsed("name", queuedPlayer.getUsername())
             );
+
+            TabListEntry entry = TabListEntry.builder()
+                    .profile(queuedPlayer.getGameProfile())
+                    .displayName(displayName)
+                    .tabList(tabList)
+                    .build();
+            tabList.addEntry(entry);
         });
     }
 }
