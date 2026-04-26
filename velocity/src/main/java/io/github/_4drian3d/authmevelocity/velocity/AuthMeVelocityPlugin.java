@@ -40,19 +40,8 @@ import io.github._4drian3d.authmevelocity.common.configuration.ConfigurationCont
 import io.github._4drian3d.authmevelocity.common.configuration.ProxyConfiguration;
 import io.github._4drian3d.authmevelocity.velocity.commands.AuthMeCommand;
 import io.github._4drian3d.authmevelocity.velocity.commands.QueueCommand;
-import io.github._4drian3d.authmevelocity.velocity.hooks.AuthMeContexts;
-import io.github._4drian3d.authmevelocity.velocity.hooks.AuthMePlaceholders;
-import io.github._4drian3d.authmevelocity.velocity.listener.Listener;
-import io.github._4drian3d.authmevelocity.velocity.listener.compat.FastLoginListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.connection.DisconnectListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.connection.InitialServerListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.connection.PostConnectListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.connection.PreConnectListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.data.PluginMessageListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.input.ChatListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.input.CommandListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.input.CompletionPacketListener;
-import io.github._4drian3d.authmevelocity.velocity.listener.input.TabCompleteListener;
+import io.github._4drian3d.authmevelocity.velocity.placeholder.AuthMeExpansion;
+import io.github._4drian3d.authmevelocity.velocity.placeholder.PlaceholderManagerImpl;
 import io.github._4drian3d.authmevelocity.velocity.utils.QueueManager;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bstats.charts.SimplePie;
@@ -115,6 +104,7 @@ public final class AuthMeVelocityPlugin implements AuthMeVelocityAPI {
     @Inject
     private Injector injector;
     private ConfigurationContainer<ProxyConfiguration> config;
+    private PlaceholderManagerImpl placeholderManager;
 
     final Set<String> authServers = ConcurrentHashMap.newKeySet();
     final Set<UUID> loggedPlayers = ConcurrentHashMap.newKeySet();
@@ -171,6 +161,9 @@ public final class AuthMeVelocityPlugin implements AuthMeVelocityAPI {
         if (pluginManager.isLoaded("luckperms")) {
             this.injector.getInstance(AuthMeContexts.class).register();
         }
+
+        this.placeholderManager = injector.getInstance(PlaceholderManagerImpl.class);
+        this.placeholderManager.registerExpansion(new AuthMeExpansion(this, injector.getInstance(QueueManager.class)));
 
         injector.getInstance(AuthMeCommand.class).register();
         injector.getInstance(QueueCommand.class).register();
@@ -260,6 +253,11 @@ public final class AuthMeVelocityPlugin implements AuthMeVelocityAPI {
         if (removed) {
             proxy.getEventManager().fire(new AuthServerRemoveEvent(predicate.toString()));
         }
+    }
+
+    @Override
+    public @NotNull io.github._4drian3d.authmevelocity.api.velocity.placeholder.PlaceholderManager placeholderManager() {
+        return this.placeholderManager;
     }
 
     public void logDebug(final String msg) {

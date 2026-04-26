@@ -94,38 +94,6 @@ public class ProxyConfiguration {
         public String leaveMessage() {
             return this.leaveMessage;
         }
-
-        private TabList tabList = new TabList();
-        public TabList tabList() {
-            return this.tabList;
-        }
-
-        @ConfigSerializable
-        public static class TabList {
-            @Comment("Enable custom TabList for queue")
-            private boolean enabled = true;
-            public boolean enabled() {
-                return this.enabled;
-            }
-
-            @Comment("TabList Header")
-            private String header = "<gold>In-game: <white>{online_game}\n<gold>Queue: <white>{online_queue}";
-            public String header() {
-                return this.header;
-            }
-
-            @Comment("TabList Footer")
-            private String footer = "<gold>Discord: <gray>dsc.gg/jaydensmp\n<white>... and {online_game} more ...";
-            public String footer() {
-                return this.footer;
-            }
-
-            @Comment("Format for player names in TabList while in queue. Use {name} for player name.")
-            private String tabNameFormat = "<gray>{name}";
-            public String tabNameFormat() {
-                return this.tabNameFormat;
-            }
-        }
     }
 
     @ConfigSerializable

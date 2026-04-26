@@ -108,4 +108,10 @@ public interface AuthMeVelocityAPI {
      * @param predicate the condition
      */
     void removeAuthServerIf(@NotNull Predicate<String> predicate);
+
+    /**
+     * Gets the placeholder manager
+     * @return the placeholder manager
+     */
+    @NotNull io.github._4drian3d.authmevelocity.api.velocity.placeholder.PlaceholderManager placeholderManager();
 }
