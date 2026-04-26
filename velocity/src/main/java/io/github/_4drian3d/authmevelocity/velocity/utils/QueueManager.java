@@ -63,7 +63,7 @@ public final class QueueManager {
     @Subscribe
     public void onLogin(ProxyLoginEvent event) {
         if (plugin.config().get().queue().enabled()) {
-            Player player = event.getPlayer();
+            Player player = event.player();
             if (isInQueue(player)) {
                 sendQueueMessage(player, plugin.config().get().queue().positionMessage());
             }
