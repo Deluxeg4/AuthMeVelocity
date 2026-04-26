@@ -59,7 +59,7 @@ public final class AuthMeExpansion extends PlaceholderExpansion {
             case "total_queue" -> String.valueOf(queueManager.getTotalQueueSize());
             case "priority_queue" -> String.valueOf(queueManager.getPriorityQueueSize());
             case "regular_queue" -> String.valueOf(queueManager.getRegularQueueSize());
-            case "estimatedtime" -> "Not supported yet";
+            case "estimatedtime" -> queueManager.getEstimatedTime(player);
             default -> null;
         };
     }

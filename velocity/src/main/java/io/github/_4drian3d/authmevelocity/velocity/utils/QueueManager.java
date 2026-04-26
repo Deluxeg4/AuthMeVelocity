@@ -117,9 +117,24 @@ public final class QueueManager {
     }
 
     public void sendQueueMessage(Player player, String message) {
+        String parsedMessage = plugin.placeholderManager().setPlaceholders(player, message);
+        player.sendMessage(MiniMessage.miniMessage().deserialize(parsedMessage));
+    }
+
+    public String getEstimatedTime(Player player) {
         int pos = getPosition(player);
-        player.sendMessage(MiniMessage.miniMessage().deserialize(message, 
-                Placeholder.unparsed("pos", String.valueOf(pos))));
+        if (pos <= 0) return "0s";
+        
+        // Simple calculation: 1 second per player in front
+        long totalSeconds = pos;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        
+        if (minutes > 0) {
+            return minutes + "m " + seconds + "s";
+        } else {
+            return seconds + "s";
+        }
     }
 
     private void processQueue() {
