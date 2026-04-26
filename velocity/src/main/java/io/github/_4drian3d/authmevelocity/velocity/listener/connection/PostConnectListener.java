@@ -26,6 +26,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import io.github._4drian3d.authmevelocity.velocity.AuthMeVelocityPlugin;
 import io.github._4drian3d.authmevelocity.velocity.listener.Listener;
+import io.github._4drian3d.authmevelocity.velocity.utils.QueueManager;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class PostConnectListener implements Listener<ServerPostConnectEvent> {
@@ -33,6 +34,8 @@ public final class PostConnectListener implements Listener<ServerPostConnectEven
     private AuthMeVelocityPlugin plugin;
     @Inject
     private EventManager eventManager;
+    @Inject
+    private QueueManager queueManager;
 
     @Override
     public void register() {
@@ -53,6 +56,11 @@ public final class PostConnectListener implements Listener<ServerPostConnectEven
             }
             final boolean isInAuthServer = plugin.isInAuthServer(player);
             plugin.logDebug("ServerPostConnectEvent | Player "+player.getUsername()+" is in AuthServer: " + isInAuthServer);
+
+            if (!isLogged && isInAuthServer && plugin.config().get().queue().enabled()) {
+                queueManager.joinQueue(player);
+                return;
+            }
 
             if (!(isLogged && isInAuthServer)) {
                 return;

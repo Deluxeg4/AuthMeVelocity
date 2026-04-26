@@ -23,6 +23,7 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import io.github._4drian3d.authmevelocity.velocity.AuthMeVelocityPlugin;
 import io.github._4drian3d.authmevelocity.velocity.listener.Listener;
+import io.github._4drian3d.authmevelocity.velocity.utils.QueueManager;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DisconnectListener implements Listener<DisconnectEvent> {
@@ -30,6 +31,8 @@ public final class DisconnectListener implements Listener<DisconnectEvent> {
     private AuthMeVelocityPlugin plugin;
     @Inject
     private EventManager eventManager;
+    @Inject
+    private QueueManager queueManager;
 
     @Override
     public void register() {
@@ -42,6 +45,9 @@ public final class DisconnectListener implements Listener<DisconnectEvent> {
             return null;
         }
 
-        return EventTask.async(() -> plugin.removePlayer(event.getPlayer()));
+        return EventTask.async(() -> {
+            plugin.removePlayer(event.getPlayer());
+            queueManager.removePlayer(event.getPlayer().getUniqueId());
+        });
     }
 }

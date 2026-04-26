@@ -53,9 +53,73 @@ public class ProxyConfiguration {
         return this.ensureAuthServer;
     }
 
+    private Queue queue = new Queue();
+    public Queue queue() {
+        return this.queue;
+    }
+
     private Advanced advanced = new Advanced();
     public Advanced advanced() {
         return this.advanced;
+    }
+
+    @ConfigSerializable
+    public static class Queue {
+        @Comment("Enable the queue system")
+        private boolean enabled = false;
+        public boolean enabled() {
+            return this.enabled;
+        }
+
+        @Comment("The target server to send players from the queue")
+        private String targetServer = "main";
+        public String targetServer() {
+            return this.targetServer;
+        }
+
+        @Comment("Message sent when joining the queue. Use {pos} for position.")
+        private String joinMessage = "<green>You have joined the queue. Position: <gold>{pos}";
+        public String joinMessage() {
+            return this.joinMessage;
+        }
+
+        @Comment("Message sent periodically or when using /queue. Use {pos} for position.")
+        private String positionMessage = "<yellow>Current position in queue: <gold>{pos}";
+        public String positionMessage() {
+            return this.positionMessage;
+        }
+
+        @Comment("Message sent when leaving the queue.")
+        private String leaveMessage = "<red>You have left the queue.";
+        public String leaveMessage() {
+            return this.leaveMessage;
+        }
+
+        private TabList tabList = new TabList();
+        public TabList tabList() {
+            return this.tabList;
+        }
+
+        @ConfigSerializable
+        public static class TabList {
+            @Comment("Enable custom TabList for queue")
+            private boolean enabled = true;
+            public boolean enabled() {
+                return this.enabled;
+            }
+
+            @Comment("TabList Header")
+            private String header = "<gold>In-game: <white>{online_game}\n<gold>Queue: <white>{online_queue}";
+            public String header() {
+                return this.header;
+            }
+
+            @Comment("TabList Footer")
+            private String footer = "<gold>Discord: <gray>dsc.gg/jaydensmp\n<white>... and {online_game} more ...";
+            public String footer() {
+                return this.footer;
+            }
+        }
     }
 
     @ConfigSerializable

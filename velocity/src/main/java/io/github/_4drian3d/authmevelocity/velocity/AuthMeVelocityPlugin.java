@@ -39,6 +39,7 @@ import io.github._4drian3d.authmevelocity.common.Constants;
 import io.github._4drian3d.authmevelocity.common.configuration.ConfigurationContainer;
 import io.github._4drian3d.authmevelocity.common.configuration.ProxyConfiguration;
 import io.github._4drian3d.authmevelocity.velocity.commands.AuthMeCommand;
+import io.github._4drian3d.authmevelocity.velocity.commands.QueueCommand;
 import io.github._4drian3d.authmevelocity.velocity.hooks.AuthMeContexts;
 import io.github._4drian3d.authmevelocity.velocity.hooks.AuthMePlaceholders;
 import io.github._4drian3d.authmevelocity.velocity.listener.Listener;
@@ -52,6 +53,7 @@ import io.github._4drian3d.authmevelocity.velocity.listener.input.ChatListener;
 import io.github._4drian3d.authmevelocity.velocity.listener.input.CommandListener;
 import io.github._4drian3d.authmevelocity.velocity.listener.input.CompletionPacketListener;
 import io.github._4drian3d.authmevelocity.velocity.listener.input.TabCompleteListener;
+import io.github._4drian3d.authmevelocity.velocity.utils.QueueManager;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bstats.charts.SimplePie;
 import org.bstats.velocity.Metrics;
@@ -171,6 +173,8 @@ public final class AuthMeVelocityPlugin implements AuthMeVelocityAPI {
         }
 
         injector.getInstance(AuthMeCommand.class).register();
+        injector.getInstance(QueueCommand.class).register();
+        injector.getInstance(QueueManager.class).start();
 
         this.sendInfoMessage();
     }
